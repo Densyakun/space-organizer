@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars, PerspectiveCamera, TransformControls } from '@react-three/drei'
@@ -15,6 +15,19 @@ function Scene() {
   const selectedId = useAppSelector((state) => state.objects.selectedId)
   const transformMode = useAppSelector((state) => state.objects.transformMode)
   const meshRefs = useRef<Record<string, THREE.Mesh | null>>({})
+  const selectedIdRef = useRef(selectedId)
+  selectedIdRef.current = selectedId
+  const objectsRef = useRef(objects)
+  objectsRef.current = objects
+
+  useEffect(() => {
+    const currentIds = new Set(objects.map((o) => o.id))
+    Object.keys(meshRefs.current).forEach((id) => {
+      if (!currentIds.has(id)) {
+        delete meshRefs.current[id]
+      }
+    })
+  }, [objects])
 
   return (
     <>
@@ -52,10 +65,11 @@ function Scene() {
           mode={transformMode}
           object={meshRefs.current[selectedId]}
           onChange={() => {
-            const m = meshRefs.current[selectedId]
+            const currentSelectedId = selectedIdRef.current
+            const m = meshRefs.current[currentSelectedId]
             if (!m) return
-            dispatch(setObjects(objects.map((it) => {
-              if (it.id !== selectedId) return it
+            dispatch(setObjects(objectsRef.current.map((it) => {
+              if (it.id !== currentSelectedId) return it
               const eps = 1e-6
               const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
               const sameRot = Math.abs((it.rotation.x) - m.rotation.x) < eps && Math.abs((it.rotation.y) - m.rotation.y) < eps && Math.abs((it.rotation.z) - m.rotation.z) < eps

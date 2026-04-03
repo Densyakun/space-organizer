@@ -12,7 +12,7 @@ export type Obj = {
 
 type ObjectsState = {
   objects: Obj[]
-  selectedId: string | null
+  selectedId: string
   transformMode: 'translate' | 'rotate' | 'scale'
 }
 
@@ -51,10 +51,10 @@ const objectsSlice = createSlice({
     removeObject(state, action: PayloadAction<string>) {
       state.objects = state.objects.filter((o) => o.id !== action.payload)
       if (state.selectedId === action.payload) {
-        state.selectedId = state.objects.length > 0 ? state.objects[0].id : null
+        state.selectedId = state.objects.length > 0 ? state.objects[0].id : ''
       }
     },
-    setSelectedId(state, action: PayloadAction<string | null>) {
+    setSelectedId(state, action: PayloadAction<string>) {
       state.selectedId = action.payload
     },
     setTransformMode(state, action: PayloadAction<'translate' | 'rotate' | 'scale'>) {
