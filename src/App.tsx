@@ -1,31 +1,22 @@
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei'
-import { useRef } from 'react'
-import * as THREE from 'three'
 import './App.css'
-
-function Box() {
-  const meshRef = useRef<THREE.Mesh>(null!)
-
-  useFrame((state, delta) => {
-    meshRef.current.rotation.x += delta
-    meshRef.current.rotation.y += delta * 0.5
-  })
-
-  return (
-    <mesh ref={meshRef}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="hotpink" />
-    </mesh>
-  )
-}
+import ObjectManager from './components/ObjectManager'
+import { ObjectsProvider, useObjects } from './contexts/ObjectsContext'
 
 function Scene() {
+  const { objects } = useObjects()
+
   return (
     <>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <Box />
+      {objects.map((o) => (
+        <mesh key={o.id} position={[o.x, o.y, o.z]}>
+          {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
+          <meshStandardMaterial color={o.color} />
+        </mesh>
+      ))}
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
       <OrbitControls />
     </>
@@ -34,16 +25,18 @@ function Scene() {
 
 function App() {
   return (
-    <div id="canvas-container">
-      <Canvas>
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <Scene />
-      </Canvas>
-      <div className="ui-overlay">
-        <h1>Vite + React + R3F (Bun)</h1>
-        <p>ドラッグして回転、スクロールでズーム</p>
+    <ObjectsProvider>
+      <div id="canvas-container">
+        <Canvas>
+          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+          <Scene />
+        </Canvas>
+        <div className="ui-overlay">
+          <p>ドラッグして回転、スクロールでズーム</p>
+          <ObjectManager />
+        </div>
       </div>
-    </div>
+    </ObjectsProvider>
   )
 }
 
