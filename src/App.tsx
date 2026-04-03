@@ -8,6 +8,7 @@ import { ObjectsProvider, useObjects } from './contexts/ObjectsContext'
 
 function Scene() {
   const { objects, selectedId, setObjects, transformMode } = useObjects()
+  const meshRefs = useRef<Record<string, THREE.Mesh | null>>({})
 
   return (
     <>
@@ -17,45 +18,22 @@ function Scene() {
         const pos = [o.position.x, o.position.y, o.position.z] as [number, number, number]
         const rot = [o.rotation?.x ?? 0, o.rotation?.y ?? 0, o.rotation?.z ?? 0] as [number, number, number]
         const scl = [o.scale?.x ?? 1, o.scale?.y ?? 1, o.scale?.z ?? 1] as [number, number, number]
-        const meshRef = useRef<THREE.Mesh>(null)
 
         return (
           <React.Fragment key={o.id}>
             {selectedId === o.id ? (
-              <TransformControls
-                mode={transformMode}
-                key={o.id + '-tc'}
-                onChange={() => {
-                  const m = meshRef.current
-                  if (!m) return
-                  setObjects((list) => {
-                    let changed = false
-                    const next = list.map((it) => {
-                      if (it.id !== o.id) return it
-                      const eps = 1e-6
-                      const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
-                      const sameRot = Math.abs((it.rotation?.x ?? 0) - m.rotation.x) < eps && Math.abs((it.rotation?.y ?? 0) - m.rotation.y) < eps && Math.abs((it.rotation?.z ?? 0) - m.rotation.z) < eps
-                      const sameScl = Math.abs((it.scale?.x ?? 1) - m.scale.x) < eps && Math.abs((it.scale?.y ?? 1) - m.scale.y) < eps && Math.abs((it.scale?.z ?? 1) - m.scale.z) < eps
-                      if (samePos && sameRot && sameScl) return it
-                      changed = true
-                      return {
-                        ...it,
-                        position: { x: m.position.x, y: m.position.y, z: m.position.z },
-                        rotation: { x: m.rotation.x, y: m.rotation.y, z: m.rotation.z },
-                        scale: { x: m.scale.x, y: m.scale.y, z: m.scale.z },
-                      }
-                    })
-                    return changed ? next : list
-                  })
-                }}
+              <mesh
+                ref={(el) => (meshRefs.current[o.id] = el)}
+                name={o.id}
+                position={pos}
+                rotation={rot}
+                scale={scl}
               >
-                <mesh ref={meshRef} name={o.id} position={pos} rotation={rot} scale={scl}>
-                  {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
-                  <meshStandardMaterial color={o.color} />
-                </mesh>
-              </TransformControls>
+                {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
+                <meshStandardMaterial color={o.color} />
+              </mesh>
             ) : (
-              <mesh name={o.id} position={pos} rotation={rot} scale={scl}>
+              <mesh ref={(el) => (meshRefs.current[o.id] = el)} name={o.id} position={pos} rotation={rot} scale={scl}>
                 {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
                 <meshStandardMaterial color={o.color} />
               </mesh>
@@ -63,6 +41,35 @@ function Scene() {
           </React.Fragment>
         )
       })}
+      {selectedId && meshRefs.current[selectedId] && (
+        <TransformControls
+          mode={transformMode}
+          object={meshRefs.current[selectedId]}
+          onChange={() => {
+            const m = meshRefs.current[selectedId]
+            if (!m) return
+            setObjects((list) => {
+              let changed = false
+              const next = list.map((it) => {
+                if (it.id !== selectedId) return it
+                const eps = 1e-6
+                const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
+                const sameRot = Math.abs((it.rotation?.x ?? 0) - m.rotation.x) < eps && Math.abs((it.rotation?.y ?? 0) - m.rotation.y) < eps && Math.abs((it.rotation?.z ?? 0) - m.rotation.z) < eps
+                const sameScl = Math.abs((it.scale?.x ?? 1) - m.scale.x) < eps && Math.abs((it.scale?.y ?? 1) - m.scale.y) < eps && Math.abs((it.scale?.z ?? 1) - m.scale.z) < eps
+                if (samePos && sameRot && sameScl) return it
+                changed = true
+                return {
+                  ...it,
+                  position: { x: m.position.x, y: m.position.y, z: m.position.z },
+                  rotation: { x: m.rotation.x, y: m.rotation.y, z: m.rotation.z },
+                  scale: { x: m.scale.x, y: m.scale.y, z: m.scale.z },
+                }
+              })
+              return changed ? next : list
+            })
+          }}
+        />
+      )}
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
       <OrbitControls makeDefault />
     </>
