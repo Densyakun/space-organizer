@@ -22,6 +22,26 @@ function Scene() {
   const objectsRef = useRef(objects)
   objectsRef.current = objects
 
+  const commitSelectedTransform = () => {
+    const currentSelectedId = selectedIdRef.current
+    const m = meshRefs.current[currentSelectedId]
+    if (!m) return
+    dispatch(setObjects(objectsRef.current.map((it) => {
+      if (it.id !== currentSelectedId) return it
+      const eps = 1e-6
+      const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
+      const sameRot = Math.abs((it.rotation.x) - m.rotation.x) < eps && Math.abs((it.rotation.y) - m.rotation.y) < eps && Math.abs((it.rotation.z) - m.rotation.z) < eps
+      const sameScl = Math.abs((it.scale.x) - m.scale.x) < eps && Math.abs((it.scale.y) - m.scale.y) < eps && Math.abs((it.scale.z) - m.scale.z) < eps
+      if (samePos && sameRot && sameScl) return it
+      return {
+        ...it,
+        position: { x: m.position.x, y: m.position.y, z: m.position.z },
+        rotation: { x: m.rotation.x, y: m.rotation.y, z: m.rotation.z },
+        scale: { x: m.scale.x, y: m.scale.y, z: m.scale.z },
+      }
+    })))
+  }
+
   useEffect(() => {
     const currentIds = new Set(objects.map((o) => o.id))
     Object.keys(meshRefs.current).forEach((id) => {
@@ -97,25 +117,7 @@ function Scene() {
           onMouseUp={() => {
             isUsingGizmoRef.current = false
             lastGizmoInteractionAtRef.current = Date.now()
-          }}
-          onChange={() => {
-            const currentSelectedId = selectedIdRef.current
-            const m = meshRefs.current[currentSelectedId]
-            if (!m) return
-            dispatch(setObjects(objectsRef.current.map((it) => {
-              if (it.id !== currentSelectedId) return it
-              const eps = 1e-6
-              const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
-              const sameRot = Math.abs((it.rotation.x) - m.rotation.x) < eps && Math.abs((it.rotation.y) - m.rotation.y) < eps && Math.abs((it.rotation.z) - m.rotation.z) < eps
-              const sameScl = Math.abs((it.scale.x) - m.scale.x) < eps && Math.abs((it.scale.y) - m.scale.y) < eps && Math.abs((it.scale.z) - m.scale.z) < eps
-              if (samePos && sameRot && sameScl) return it
-              return {
-                ...it,
-                position: { x: m.position.x, y: m.position.y, z: m.position.z },
-                rotation: { x: m.rotation.x, y: m.rotation.y, z: m.rotation.z },
-                scale: { x: m.scale.x, y: m.scale.y, z: m.scale.z },
-              }
-            })))
+            commitSelectedTransform()
           }}
         />
       )}
