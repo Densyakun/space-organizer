@@ -2,12 +2,18 @@ import React, { useRef } from 'react'
 import * as THREE from 'three'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars, PerspectiveCamera, TransformControls } from '@react-three/drei'
+import { Provider } from 'react-redux'
+import { store } from './store'
+import { useAppSelector, useAppDispatch } from './hooks/useRedux'
+import { setObjects } from './store/objectsSlice'
 import './App.css'
 import ObjectManager from './components/ObjectManager'
-import { ObjectsProvider, useObjects } from './contexts/ObjectsContext'
 
 function Scene() {
-  const { objects, selectedId, setObjects, transformMode } = useObjects()
+  const dispatch = useAppDispatch()
+  const objects = useAppSelector((state) => state.objects.objects)
+  const selectedId = useAppSelector((state) => state.objects.selectedId)
+  const transformMode = useAppSelector((state) => state.objects.transformMode)
   const meshRefs = useRef<Record<string, THREE.Mesh | null>>({})
 
   return (
@@ -48,25 +54,20 @@ function Scene() {
           onChange={() => {
             const m = meshRefs.current[selectedId]
             if (!m) return
-            setObjects((list) => {
-              let changed = false
-              const next = list.map((it) => {
-                if (it.id !== selectedId) return it
-                const eps = 1e-6
-                const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
-                const sameRot = Math.abs((it.rotation?.x ?? 0) - m.rotation.x) < eps && Math.abs((it.rotation?.y ?? 0) - m.rotation.y) < eps && Math.abs((it.rotation?.z ?? 0) - m.rotation.z) < eps
-                const sameScl = Math.abs((it.scale?.x ?? 1) - m.scale.x) < eps && Math.abs((it.scale?.y ?? 1) - m.scale.y) < eps && Math.abs((it.scale?.z ?? 1) - m.scale.z) < eps
-                if (samePos && sameRot && sameScl) return it
-                changed = true
-                return {
-                  ...it,
-                  position: { x: m.position.x, y: m.position.y, z: m.position.z },
-                  rotation: { x: m.rotation.x, y: m.rotation.y, z: m.rotation.z },
-                  scale: { x: m.scale.x, y: m.scale.y, z: m.scale.z },
-                }
-              })
-              return changed ? next : list
-            })
+            dispatch(setObjects(objects.map((it) => {
+              if (it.id !== selectedId) return it
+              const eps = 1e-6
+              const samePos = Math.abs(it.position.x - m.position.x) < eps && Math.abs(it.position.y - m.position.y) < eps && Math.abs(it.position.z - m.position.z) < eps
+              const sameRot = Math.abs((it.rotation.x) - m.rotation.x) < eps && Math.abs((it.rotation.y) - m.rotation.y) < eps && Math.abs((it.rotation.z) - m.rotation.z) < eps
+              const sameScl = Math.abs((it.scale.x) - m.scale.x) < eps && Math.abs((it.scale.y) - m.scale.y) < eps && Math.abs((it.scale.z) - m.scale.z) < eps
+              if (samePos && sameRot && sameScl) return it
+              return {
+                ...it,
+                position: { x: m.position.x, y: m.position.y, z: m.position.z },
+                rotation: { x: m.rotation.x, y: m.rotation.y, z: m.rotation.z },
+                scale: { x: m.scale.x, y: m.scale.y, z: m.scale.z },
+              }
+            })))
           }}
         />
       )}
@@ -78,7 +79,7 @@ function Scene() {
 
 function App() {
   return (
-    <ObjectsProvider>
+    <Provider store={store}>
       <div id="canvas-container">
         <Canvas>
           <PerspectiveCamera makeDefault position={[0, 0, 5]} />
@@ -89,7 +90,7 @@ function App() {
           <ObjectManager />
         </div>
       </div>
-    </ObjectsProvider>
+    </Provider>
   )
 }
 
