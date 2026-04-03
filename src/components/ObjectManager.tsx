@@ -53,7 +53,7 @@ export default function ObjectManager() {
             labelId="select-obj-label"
             value={selectedId ?? ''}
             label="選択"
-            onChange={(e) => dispatch(setSelectedId((e.target.value as string) || null))}
+            onChange={(e) => dispatch(setSelectedId(e.target.value as string))}
           >
             {objects.map((o) => (
               <MenuItem key={o.id} value={o.id}>{o.id} - {o.type}</MenuItem>

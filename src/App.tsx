@@ -60,10 +60,11 @@ function Scene() {
           </React.Fragment>
         )
       })}
-      {selectedId && meshRefs.current[selectedId] && (
+      {selectedId && objectsRef.current.some((o) => o.id === selectedId) && (
         <TransformControls
+          key={selectedId}
           mode={transformMode}
-          object={meshRefs.current[selectedId]}
+          object={meshRefs.current[selectedId] ?? undefined}
           onChange={() => {
             const currentSelectedId = selectedIdRef.current
             const m = meshRefs.current[currentSelectedId]
