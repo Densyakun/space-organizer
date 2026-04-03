@@ -1,11 +1,11 @@
 import React, { useRef, useEffect } from 'react'
 import * as THREE from 'three'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls, Stars, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Provider } from 'react-redux'
 import { store } from './store'
 import { useAppSelector, useAppDispatch } from './hooks/useRedux'
-import { setObjects } from './store/objectsSlice'
+import { setObjects, setSelectedId } from './store/objectsSlice'
 import './App.css'
 import ObjectManager from './components/ObjectManager'
 
@@ -15,6 +15,8 @@ function Scene() {
   const selectedId = useAppSelector((state) => state.objects.selectedId)
   const transformMode = useAppSelector((state) => state.objects.transformMode)
   const meshRefs = useRef<Record<string, THREE.Mesh | null>>({})
+  const isUsingGizmoRef = useRef(false)
+  const lastGizmoInteractionAtRef = useRef(0)
   const selectedIdRef = useRef(selectedId)
   selectedIdRef.current = selectedId
   const objectsRef = useRef(objects)
@@ -31,40 +33,71 @@ function Scene() {
 
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      {objects.map((o) => {
-        const pos = [o.position.x, o.position.y, o.position.z] as [number, number, number]
-        const rot = [o.rotation?.x ?? 0, o.rotation?.y ?? 0, o.rotation?.z ?? 0] as [number, number, number]
-        const scl = [o.scale?.x ?? 1, o.scale?.y ?? 1, o.scale?.z ?? 1] as [number, number, number]
+      <group
+        onPointerMissed={() => {
+          if (!isUsingGizmoRef.current) {
+            dispatch(setSelectedId(''))
+          }
+        }}
+      >
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        {objects.map((o) => {
+          const pos = [o.position.x, o.position.y, o.position.z] as [number, number, number]
+          const rot = [o.rotation?.x ?? 0, o.rotation?.y ?? 0, o.rotation?.z ?? 0] as [number, number, number]
+          const scl = [o.scale?.x ?? 1, o.scale?.y ?? 1, o.scale?.z ?? 1] as [number, number, number]
+          const handleClick = (e: ThreeEvent<MouseEvent>) => {
+            e.stopPropagation()
+            if (isUsingGizmoRef.current) return
+            if (Date.now() - lastGizmoInteractionAtRef.current < 250) return
+            if (e.delta > 2) return
+            dispatch(setSelectedId(o.id))
+          }
 
-        return (
-          <React.Fragment key={o.id}>
-            {selectedId === o.id ? (
-              <mesh
-                ref={(el) => (meshRefs.current[o.id] = el)}
-                name={o.id}
-                position={pos}
-                rotation={rot}
-                scale={scl}
-              >
-                {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
-                <meshStandardMaterial color={o.color} />
-              </mesh>
-            ) : (
-              <mesh ref={(el) => (meshRefs.current[o.id] = el)} name={o.id} position={pos} rotation={rot} scale={scl}>
-                {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
-                <meshStandardMaterial color={o.color} />
-              </mesh>
-            )}
-          </React.Fragment>
-        )
-      })}
+          return (
+            <React.Fragment key={o.id}>
+              {selectedId === o.id ? (
+                <mesh
+                  ref={(el) => (meshRefs.current[o.id] = el)}
+                  name={o.id}
+                  position={pos}
+                  rotation={rot}
+                  scale={scl}
+                  onClick={handleClick}
+                >
+                  {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
+                  <meshStandardMaterial color={o.color} />
+                </mesh>
+              ) : (
+                <mesh
+                  ref={(el) => (meshRefs.current[o.id] = el)}
+                  name={o.id}
+                  position={pos}
+                  rotation={rot}
+                  scale={scl}
+                  onClick={handleClick}
+                >
+                  {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
+                  <meshStandardMaterial color={o.color} />
+                </mesh>
+              )}
+            </React.Fragment>
+          )
+        })}
+      </group>
       {selectedId && objectsRef.current.some((o) => o.id === selectedId) && (
         <TransformControls
           key={selectedId}
           mode={transformMode}
           object={meshRefs.current[selectedId] ?? undefined}
+          onMouseDown={() => {
+            isUsingGizmoRef.current = true
+            lastGizmoInteractionAtRef.current = Date.now()
+          }}
+          onMouseUp={() => {
+            isUsingGizmoRef.current = false
+            lastGizmoInteractionAtRef.current = Date.now()
+          }}
           onChange={() => {
             const currentSelectedId = selectedIdRef.current
             const m = meshRefs.current[currentSelectedId]
