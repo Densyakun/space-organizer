@@ -10,7 +10,7 @@ export default function ObjectManager() {
   const transformMode = useAppSelector((state) => state.objects.transformMode)
 
   function handleAddObject() {
-    const id = `obj-${Date.now()}`
+    const id = `obj-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`}`
     const o: Obj = {
       id,
       type: 'box',
