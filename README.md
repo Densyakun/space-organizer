@@ -1,73 +1,53 @@
-# React + TypeScript + Vite
+# Space Organizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Space Organizerは、3D空間上でモノ（オブジェクト）を視覚的に分類、整理するためのアプリケーションです。
+直感的な3D操作により、アイテムを配置し、色や形を変えて構造化することができます。
 
-Currently, two official plugins are available:
+## 主な機能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **3Dオブジェクトの配置**: 立方体（Box）や球体（Sphere）を自由に追加できます。
+- **直感的な操作（ギズモ）**: 選択したオブジェクトに対して、移動・回転・拡大縮小をマウスで直感的に行えます。
+- **詳細なプロパティ設定**: オブジェクトの色、位置、角度、サイズを数値で細かく指定可能です。
+- **リスト管理**: 配置したオブジェクトをリストから選択し、管理（追加・削除）できます。
 
-## React Compiler
+## 使い方
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. オブジェクトの追加と削除
+- 画面右側のパネルにある「追加」ボタンを押すと、新しいオブジェクトが3D空間に現れます。
+- 不要なオブジェクトは「削除」ボタンで取り除くことができます。
 
-## Expanding the ESLint configuration
+### 2. オブジェクトの選択
+- 3D空間上のオブジェクトを直接クリックするか、パネル内の「選択」プルダウンから対象を選びます。
+- 選択されたオブジェクトには、操作用のガイド（ギズモ）が表示されます。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 3. オブジェクトの変形
+- **操作モードの切り替え**: パネルの「操作モード」から「移動」「回転」「拡縮」を切り替えられます。
+- **マウス操作**: 画面上のギズモをドラッグすることで、直感的に形や位置を変えられます。
+- **数値入力**: パネルの各入力欄に直接数値を入力して、正確な調整も可能です。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 4. カメラ操作
+- **回転**: 画面上の何もないところをドラッグします。
+- **ズーム**: マウスホイール（またはトラックパッドのスクロール）を使用します。
+- **平行移動**: 右クリックしながらドラッグします。
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 開発・セットアップ
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+このプロジェクトは **Bun** と **Vite** を使用して構築されています。
+
+### インストール
+```bash
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 開発サーバーの起動
+```bash
+bun run dev
 ```
+
+### ビルド
+```bash
+bun run build
+```
+
+---
+*Created with ❤️ by Antigravity*
