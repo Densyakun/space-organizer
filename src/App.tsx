@@ -22,6 +22,15 @@ function Scene() {
   const objectsRef = useRef(objects)
   objectsRef.current = objects
 
+  const [gizmoTarget, setGizmoTarget] = React.useState<THREE.Object3D | null>(null)
+  useEffect(() => {
+    if (selectedId && meshRefs.current[selectedId]) {
+      setGizmoTarget(meshRefs.current[selectedId])
+    } else {
+      setGizmoTarget(null)
+    }
+  }, [selectedId, objects])
+
   const commitSelectedTransform = () => {
     const currentSelectedId = selectedIdRef.current
     const m = meshRefs.current[currentSelectedId]
@@ -75,41 +84,25 @@ function Scene() {
           }
 
           return (
-            <React.Fragment key={o.id}>
-              {selectedId === o.id ? (
-                <mesh
-                  ref={(el) => (meshRefs.current[o.id] = el)}
-                  name={o.id}
-                  position={pos}
-                  rotation={rot}
-                  scale={scl}
-                  onClick={handleClick}
-                >
-                  {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
-                  <meshStandardMaterial color={o.color} />
-                </mesh>
-              ) : (
-                <mesh
-                  ref={(el) => (meshRefs.current[o.id] = el)}
-                  name={o.id}
-                  position={pos}
-                  rotation={rot}
-                  scale={scl}
-                  onClick={handleClick}
-                >
-                  {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
-                  <meshStandardMaterial color={o.color} />
-                </mesh>
-              )}
-            </React.Fragment>
+            <mesh
+              key={o.id}
+              ref={(el) => (meshRefs.current[o.id] = el)}
+              name={o.id}
+              position={pos}
+              rotation={rot}
+              scale={scl}
+              onClick={handleClick}
+            >
+              {o.type === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.6, 32, 32]} />}
+              <meshStandardMaterial color={o.color} />
+            </mesh>
           )
         })}
       </group>
-      {selectedId && objectsRef.current.some((o) => o.id === selectedId) && (
+      {gizmoTarget && selectedId && objectsRef.current.some((o) => o.id === selectedId) && (
         <TransformControls
-          key={selectedId}
           mode={transformMode}
-          object={meshRefs.current[selectedId] ?? undefined}
+          object={gizmoTarget}
           onMouseDown={() => {
             isUsingGizmoRef.current = true
             lastGizmoInteractionAtRef.current = Date.now()
